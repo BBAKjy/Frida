@@ -10,11 +10,10 @@ else
 fi
 
 
-
-cat /etc/login.defs | grep "pass_warn_age" > /dev/null 2>&1
+grep "pass_warn_age" > /dev/null 2>&1 < /etc/login.defs
 if [ $? == 0 ]
 then
-	pass_warn_age=`cat /etc/login.defs |grep "pass_warn_age"`
+	pass_warn_age=$(grep "pass_warn_age" < /etc/login.defs)
 		
 	for i in $pass_warn_age;
 	do
@@ -34,7 +33,7 @@ fi
 cat /etc/login.defs | grep "pass_max_days" > /dev/null 2>&1
 if [ $? == 0 ]
 then
-	pass_max_days=`cat /etc/login.defs |grep "pass_max_days"`
+	pass_max_days=$(cat /etc/login.defs |grep "pass_max_days")
 		
 	for i in $pass_max_days;
 	do
@@ -475,7 +474,13 @@ sudo chmod 644 /etc/services > /dev/null 2>&1
 echo "Change Permission /etc/services"
 
 sudo find / -user root -type f \( -perm -04000 -o -perm -02000 \) -exec ls -al {} \;
+echo "Check Special Permission"
 
+ls -l $HOME
+chmod o-w $HOME
+echo "Delete Other's Permission on Home Directory"
 
+sudo find / -type f -perm -2 -exec ls -l {} \;
+echo "Check World Writable Files"
 
 
