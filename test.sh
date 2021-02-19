@@ -1,5 +1,4 @@
 #!/bin/bash
-
 grep "pts/" /etc/securetty > /dev/null 2>&1
 
 if [ $? == 0 ]
@@ -285,33 +284,197 @@ else
 	echo "[2-10] Not Vuln"
 fi
 
-pass_limit=`cat /etc/pam.d/system-auth`
+pass_limit=`cat /etc/pam.d/system-auth | grep "deny"`
 
 if [ $? == 1 ]
 then
 	vuln=1
-else
-	
+else 
+	eval `echo $pass_limit | sed "s/ /;/g"` > /dev/null 2>&1
+
+	if [ $deny -gt 5 ]
+	then
+		vuln=1
+	else
+		vuln=0	
+	fi
 fi
 
+if [ $vuln == 1 ]
+then
+	echo "[3-1] Vuln"
+else
+	echo "[3-1] Not Vuln"
+fi 
+
+vuln=0 # initialize FLAG variable
+
+test -f /etc/shadow # Check exist /etc/shadow
+if [ $? == 1 ]
+then
+	vuln=1 # Not exist /etc/shadow File -> FLAG ON
+else
+	if grep -Evq '^[^:]*:x:' /etc/passwd
+	then
+		vuln=1
+	else
+		vuln=0
+	fi
+fi
+
+if [ $vuln == 1 ] 
+# Print Result
+
+then
+	echo "[4-1] Vuln"
+else
+	echo "[4-1] Not Vuln"
+fi 
+
+##--------------------------------------------------------------------------------------------
+##--------------------------------------------------------------------------------------------
+##-------------------------------------CLEAR--------------------------------------------------
+##--------------------------------------------------------------------------------------------
+##--------------------------------------------------------------------------------------------
+
+# initialize FLAG variable
+vuln=0
+
+# grep True -> return 0, v -> Non-matching lines, E -> regular expression
+dir_path=`cat ~/.profile | grep -i "path=" | sed 's/ //g'`
+
+for i in $dir_path;
+do
+	temp=`echo $i | cut -d'"' -f 2`
+
+	if [ "${temp:0:1}" == '.' ]
+	then	
+		vuln=1
+	fi
+done
+
+# Print Result
+if [ $vuln == 1 ] 
+then
+	echo "[5-1] Vuln"
+else
+	echo "[5-1] Not Vuln"
+fi 
+
+# initialize FLAG variable
+vuln=0
+
+# grep True -> return 0, v -> Non-matching lines, E -> regular expression
+dir_path=`cat /etc/profile | grep -i "path=" | sed 's/ //g'`
+
+for i in $dir_path;
+do
+	temp=`echo $i | cut -d'"' -f 2`
+
+	if [ "${temp:0:1}" == '.' ]
+	then	
+		vuln=1
+	fi
+done
+
+# Print Result
+if [ $vuln == 1 ] 
+then
+	echo "[5-2] Vuln"
+else
+	echo "[5-2] Not Vuln"
+fi 
+
+# initialize FLAG variable
+vuln=0
+
+nouser=`sudo find / -nouser -print 2>&1`
+for i in $nouser;
+do
+	if [ "${i:0:1}" == '/' ]
+	then
+		vuln=1
+	fi
+done
+
+# Print Result
+if [ $vuln == 1 ] 
+then
+	echo "[6-1] Vuln"
+else
+	echo "[6-1] Not Vuln"
+fi
+
+# initialize FLAG variable
+vuln=0
+
+nogroup=`sudo find / -nogroup -print 2>&1`
+for i in $nogroup;
+do
+	if [ "${i:0:1}" == '/' ]
+	then
+		vuln=1
+	fi
+done
+
+# Print Result
+if [ $vuln == 1 ] 
+then
+	echo "[6-2] Vuln"
+else
+	echo "[6-2] Not Vuln"
+fi 
 
 
 
 
 
+sudo chown root /etc/passwd
+echo "Change Owner /etc/passwd"
+sudo chmod 644 /etc/passwd
+echo "Change Permission /etc/passwd"
 
+sudo chown root /etc/shadow
+echo "Change Owner /etc/shadow"
+sudo chmod 400 /etc/shadow
+echo "Change Permission /etc/shadow"
 
+sudo chown root /etc/hosts
+echo "Change Owner /etc/hosts"
+sudo chmod 600 /etc/hosts
+echo "Change Permission /etc/hosts"
 
+sudo chown root /etc/inetd.conf > /dev/null 2>&1
+echo "Change Owner /etc/inetd.conf"
+sudo chmod 600 /etc/inetd.conf > /dev/null 2>&1
+echo "Change Permission /etc/inetd.conf"
 
+sudo chown root /etc/xinetd.conf > /dev/null 2>&1
+echo "Change Owner /etc/xinetd.conf"
+sudo chmod 600 /etc/xinetd.conf > /dev/null 2>&1
+echo "Change Permission /etc/xinetd.conf"
 
+sudo chown -R root /etc/xinetd.d > /dev/null 2>&1
+echo "Change Owner /etc/xinetd.d (Recursive)"
+sudo chmod -R 600 /etc/xinetd.d > /dev/null 2>&1
+echo "Change Permission /etc/xinetd.d (Recursive)"
 
+sudo chown root /etc/syslog.conf > /dev/null 2>&1
+echo "Change Owner /etc/syslog.conf"
+sudo chmod 644 /etc/syslog.conf > /dev/null 2>&1
+echo "Change Permission /etc/syslog.conf"
 
+sudo chown root /etc/rsyslog.conf > /dev/null 2>&1
+echo "Change Owner /etc/rsyslog.conf"
+sudo chmod 644 /etc/rsyslog.conf > /dev/null 2>&1
+echo "Change Permission /etc/rsyslog.conf"
 
+sudo chown root /etc/services > /dev/null 2>&1
+echo "Change Owner /etc/services"
+sudo chmod 644 /etc/services > /dev/null 2>&1
+echo "Change Permission /etc/services"
 
-
-
-
-
+sudo find / -user root -type f \( -perm -04000 -o -perm -02000 \) -exec ls -al {} \;
 
 
 
